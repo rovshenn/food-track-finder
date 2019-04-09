@@ -14,12 +14,34 @@ plugins {
     id 'application'
 }
 
+version = '0.1'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
 // Define the main class for the application
 mainClassName = 'FoodTrackFinder'
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'Runnable Jar',
+                'Implementation-Version': version,
+                'Main-Class': 'FoodTrackFinder'
+    }
+    baseName = project.name
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
 
 dependencies {
     // This dependency is found on compile classpath of this component and consumers.
     compile 'com.google.guava:guava:23.0'
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.6'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+    compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.1'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.9.8'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.9.8'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.8'
 
     // Use JUnit test framework
     testCompile 'junit:junit:4.12'
