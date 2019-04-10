@@ -31,6 +31,7 @@ public class FoodTrackFinder {
     private static final String LINE_SEPARATOR = System.lineSeparator();
     private static final String DISPLAY_FORMAT = "%-30s%s";
     private static final Logger logger = Logger.getLogger(FoodTruckInfo.class.getName());
+    public static final int PAGE_SIZE = 10;
 
     public static void main(String[] args) {
         FoodTrackFinder foodTrackFinder = new FoodTrackFinder();
@@ -39,8 +40,8 @@ public class FoodTrackFinder {
 
             LocalDateTime localDate = LocalDateTime.now(TimeZone.getDefault().toZoneId());
             List<FoodTruckInfo> foodTruckInfoOpen = foodTruckInfos.stream().filter(foodTruckInfo -> {
-                LocalDateTime startLocalDateTime = extractLocalDateTime(localDate, foodTruckInfo.getStartTime());
-                LocalDateTime endLocalDateTime = extractLocalDateTime(localDate, foodTruckInfo.getEndTime());
+                LocalDateTime startLocalDateTime = convertTimeStrToLocalDateTime(localDate, foodTruckInfo.getStartTime());
+                LocalDateTime endLocalDateTime = convertTimeStrToLocalDateTime(localDate, foodTruckInfo.getEndTime());
                 return (localDate.isEqual(startLocalDateTime) || localDate.isAfter(startLocalDateTime)) &&
                         localDate.isBefore(endLocalDateTime);
             }).distinct().collect(Collectors.toList());
@@ -51,13 +52,10 @@ public class FoodTrackFinder {
         }
     }
 
-    private static LocalDateTime extractLocalDateTime(LocalDateTime currentLocalDateTime, String hourMin) {
-        LocalTime localTime = convertStrToLocalTime(hourMin);
-        return LocalDateTime.of(currentLocalDateTime.getYear(), currentLocalDateTime.getMonth(), currentLocalDateTime.getDayOfMonth(), localTime.getHour(), localTime.getMinute(), 0);
-    }
-
-    private static LocalTime convertStrToLocalTime(String hourMin) {
-        return LocalTime.parse(hourMin, DateTimeFormatter.ofPattern(HH24_MM));
+    private static LocalDateTime convertTimeStrToLocalDateTime(LocalDateTime currentLocalDateTime, String hourMin) {
+        LocalTime localTime = LocalTime.parse(hourMin, DateTimeFormatter.ofPattern(HH24_MM));
+        return LocalDateTime.of(currentLocalDateTime.getYear(), currentLocalDateTime.getMonth(), currentLocalDateTime.getDayOfMonth(),
+                localTime.getHour(), localTime.getMinute(), 0);
     }
 
     private List<FoodTruckInfo> loadTruckData() throws Exception {
@@ -84,7 +82,6 @@ public class FoodTrackFinder {
 
     private void showOpenFoodTrucks(List<FoodTruckInfo> foodTruckInfos) throws IOException {
         int idx = 0;
-        int displaySize = 10;
         List<FoodTruckInfo> foodTruckInfosCurrent;
         if (CollectionUtils.isEmpty(foodTruckInfos)) {
             logger.log(Level.FINE, "Sorry, no food trucks at the moment.");
@@ -92,15 +89,8 @@ public class FoodTrackFinder {
         }
         System.out.println(String.format(DISPLAY_FORMAT, "NAME", "ADDRESS"));
         while (foodTruckInfos.size() > idx) {
-            int remainingItems = foodTruckInfos.size() - idx;
-            int idxEndExclusive = idx;
-            if (remainingItems < displaySize) {
-                idxEndExclusive += remainingItems;
-            } else {
-                idxEndExclusive += displaySize;
-            }
-            foodTruckInfosCurrent = foodTruckInfos.subList(idx, idxEndExclusive);
-            idx += displaySize;
+            foodTruckInfosCurrent = getPage(foodTruckInfos, idx);
+            idx += PAGE_SIZE;
             displayFoodTruckInfo(foodTruckInfosCurrent);
             if (foodTruckInfos.size() > idx) {
                 waitToDisplayMore();
@@ -110,8 +100,19 @@ public class FoodTrackFinder {
         }
     }
 
+    private List<FoodTruckInfo> getPage(List<FoodTruckInfo> foodTruckInfos, int idx) {
+        int remainingItems = foodTruckInfos.size() - idx;
+        int idxEndExclusive = idx;
+        if (remainingItems < PAGE_SIZE) {
+            idxEndExclusive += remainingItems;
+        } else {
+            idxEndExclusive += PAGE_SIZE;
+        }
+        return foodTruckInfos.subList(idx, idxEndExclusive);
+    }
+
     private void waitToDisplayMore() throws IOException {
-        System.out.print("Press any key to see more...");
+        System.out.print("Press enter key to see more...");
         System.in.read();
         System.out.println();
     }
