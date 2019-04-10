@@ -13,6 +13,7 @@ to your local machine use below git command (I assume you already have git insta
 
 ```
 git clone https://github.com/rovshenn/food-track-finder.git
+cd food-track-finder
 ```
 
 ### Installing
@@ -34,7 +35,7 @@ Finally navigate to the folder where the runnable jar was created. In my case it
 and run the jar using command below
 
 ```
-cd D:\git\food-track-finder\build\libs
+cd build\libs
 java -jar food-track-finder-0.1.jar
 ```
 
